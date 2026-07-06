@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { MoreHorizontal, type LucideIcon } from 'lucide-react'
@@ -57,12 +58,14 @@ export function Sidebar({ items, userName, userRole, profileHref }: SidebarProps
         style={{ background: 'var(--bg-sidebar)' }}
       >
         <div className="flex items-center gap-2.5 px-4 py-5">
-          <div
-            className="flex size-8 shrink-0 items-center justify-center rounded-lg font-medium text-[14px]"
-            style={{ background: 'var(--forest-600)', color: '#fff' }}
-          >
-            Z
-          </div>
+          <Image
+            src="/logo.png"
+            alt="ZeladoriaSaaS"
+            width={32}
+            height={33}
+            priority
+            className="size-8 shrink-0 rounded-lg object-contain"
+          />
           <span
             className="hidden md:group-hover:inline lg:inline whitespace-nowrap text-[15px] font-medium"
             style={{ color: 'var(--text-on-dark)' }}

@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import Link from 'next/link'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -89,12 +90,14 @@ export default function CadastroPage() {
     <div className="flex min-h-screen items-center justify-center px-4 py-10">
       <div className="w-full max-w-sm">
         <div className="mb-6 text-center">
-          <div
-            className="mx-auto mb-4 flex size-12 items-center justify-center rounded-xl text-[18px] font-medium"
-            style={{ background: 'var(--forest-700)', color: '#fff' }}
-          >
-            Z
-          </div>
+          <Image
+            src="/logo.png"
+            alt="ZeladoriaSaaS"
+            width={56}
+            height={58}
+            priority
+            className="mx-auto mb-4 rounded-xl object-contain"
+          />
           <h1 className="text-[18px] font-medium" style={{ color: 'var(--text-primary)' }}>
             Criar organização
           </h1>

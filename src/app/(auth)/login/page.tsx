@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import Link from 'next/link'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -49,19 +50,31 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-4 py-10">
-      <div className="w-full max-w-sm">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden px-4 py-10">
+      <Image
+        src="/bg-login.png"
+        alt=""
+        fill
+        priority
+        sizes="100vw"
+        className="object-cover"
+      />
+      <div className="absolute inset-0" style={{ background: 'rgba(31, 74, 44, 0.7)' }} />
+
+      <div className="relative z-10 w-full max-w-sm">
         <div className="mb-6 text-center">
-          <div
-            className="mx-auto mb-4 flex size-12 items-center justify-center rounded-xl text-[18px] font-medium"
-            style={{ background: 'var(--forest-700)', color: '#fff' }}
-          >
-            Z
-          </div>
-          <h1 className="text-[18px] font-medium" style={{ color: 'var(--text-primary)' }}>
+          <Image
+            src="/logo.png"
+            alt="ZeladoriaSaaS"
+            width={56}
+            height={58}
+            priority
+            className="mx-auto mb-4 rounded-xl object-contain"
+          />
+          <h1 className="text-[18px] font-medium" style={{ color: 'var(--text-on-dark)' }}>
             Entrar
           </h1>
-          <p className="text-[13px]" style={{ color: 'var(--text-secondary)' }}>
+          <p className="text-[13px]" style={{ color: 'var(--text-on-dark-muted)' }}>
             Acesse sua conta ZeladoriaSaaS
           </p>
         </div>
@@ -104,9 +117,9 @@ export default function LoginPage() {
           </Form>
         </GlassCard>
 
-        <p className="mt-4 text-center text-[13px]" style={{ color: 'var(--text-secondary)' }}>
+        <p className="mt-4 text-center text-[13px]" style={{ color: 'var(--text-on-dark-muted)' }}>
           Ainda não tem uma organização?{' '}
-          <Link href="/cadastro" className="font-medium" style={{ color: 'var(--forest-700)' }}>
+          <Link href="/cadastro" className="font-medium" style={{ color: 'var(--text-on-dark)' }}>
             Criar cadastro
           </Link>
         </p>
