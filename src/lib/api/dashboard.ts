@@ -130,7 +130,19 @@ export async function getDashboardData(
 
   if (!isAdmin) query = query.eq('inspetor_id', user.id)
 
-  const { data: inspecoesRaw } = await query
+  let ncQuery = supabase.from('nao_conformidades').select('id, criticidade').eq('status', 'aberta')
+  if (!isAdmin) ncQuery = ncQuery.eq('responsavel_id', user.id)
+
+  const rangeAnteriorCalc = rangeAnterior(inicio, fim)
+
+  // As três consultas abaixo são independentes entre si — rodam em paralelo
+  // em vez de em série para reduzir a latência total da página.
+  const [{ data: inspecoesRaw }, { data: ncsAbertasRaw }, iqlAnterior] = await Promise.all([
+    query,
+    ncQuery,
+    iqlMedioParaRange(supabase, user, rangeAnteriorCalc.inicio, rangeAnteriorCalc.fim),
+  ])
+
   const inspecoes = inspecoesRaw ?? []
   const finalizadas = inspecoes.filter((i) => i.status === 'finalizada')
 
@@ -146,9 +158,6 @@ export async function getDashboardData(
       ) / 100
     : 0
 
-  let ncQuery = supabase.from('nao_conformidades').select('id, criticidade').eq('status', 'aberta')
-  if (!isAdmin) ncQuery = ncQuery.eq('responsavel_id', user.id)
-  const { data: ncsAbertasRaw } = await ncQuery
   const ncsAbertas = ncsAbertasRaw ?? []
 
   const ncsPorCriticidade = {
@@ -206,13 +215,6 @@ export async function getDashboardData(
       status: i.status,
     }))
 
-  const rangeAnteriorCalc = rangeAnterior(inicio, fim)
-  const iqlAnterior = await iqlMedioParaRange(
-    supabase,
-    user,
-    rangeAnteriorCalc.inicio,
-    rangeAnteriorCalc.fim
-  )
   const iqlVariacao =
     iqlAnterior !== null && finalizadas.length > 0 ? Math.round((iqlMedio - iqlAnterior) * 100) / 100 : null
 

@@ -69,20 +69,19 @@ export async function getRelatoriosData(
   const desempenhoPorCriterio: { criterio: string; nota_media: number }[] = []
 
   if (inspecaoIds.length > 0) {
-    const { data: ncs } = await supabase
-      .from('nao_conformidades')
-      .select('criticidade')
-      .in('inspecao_id', inspecaoIds)
+    // Consultas independentes entre si — rodam em paralelo em vez de em série.
+    const [{ data: ncs }, { data: avaliacoes }] = await Promise.all([
+      supabase.from('nao_conformidades').select('criticidade').in('inspecao_id', inspecaoIds),
+      supabase
+        .from('avaliacoes_limpeza')
+        .select('nota, criterios_avaliacao(nome)')
+        .in('inspecao_id', inspecaoIds),
+    ])
 
     for (const nc of ncs ?? []) {
       const chave = nc.criticidade as keyof typeof ncsPorCriticidade
       if (chave in ncsPorCriticidade) ncsPorCriticidade[chave] += 1
     }
-
-    const { data: avaliacoes } = await supabase
-      .from('avaliacoes_limpeza')
-      .select('nota, criterios_avaliacao(nome)')
-      .in('inspecao_id', inspecaoIds)
 
     const criterioMap = new Map<string, { soma: number; total: number }>()
     for (const a of avaliacoes ?? []) {
