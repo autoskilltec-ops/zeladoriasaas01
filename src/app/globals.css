@@ -197,8 +197,8 @@
      bg-login.png aparece como uma marca d'água clara sobre o off-white, nunca escurecendo o fundo. */
   .app-bg {
     background-color: var(--bg-app);
-    background-image: linear-gradient(rgba(245, 246, 244, 0.94), rgba(245, 246, 244, 0.94)), url('/bg-login.png');
-    background-size: cover;
+    background-image: linear-gradient(rgba(245, 246, 244, 0.86), rgba(245, 246, 244, 0.86)), url('/bg-login.png');
+    background-size: 55%;
     background-position: center;
     background-repeat: no-repeat;
   }
