@@ -1,7 +1,9 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { AuthUser } from '@/types/app'
 
-export type Periodo = 'hoje' | 'semana' | 'mes' | 'mes_anterior' | 'personalizado'
+export type Periodo = 'hoje' | 'semana' | 'mes' | 'mes_anterior' | 'ultimos_3_meses'
+
+const MESES_LABEL = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
 
 function toIso(d: Date) {
   return d.toISOString().slice(0, 10)
@@ -23,6 +25,10 @@ export function rangeForPeriodo(periodo: Periodo): { inicio: string; fim: string
     const fim = new Date(now.getFullYear(), now.getMonth(), 0)
     return { inicio: toIso(inicio), fim: toIso(fim) }
   }
+  if (periodo === 'ultimos_3_meses') {
+    const inicio = new Date(now.getFullYear(), now.getMonth() - 2, 1)
+    return { inicio: toIso(inicio), fim: toIso(now) }
+  }
   const inicio = new Date(now.getFullYear(), now.getMonth(), 1)
   return { inicio: toIso(inicio), fim: toIso(now) }
 }
@@ -41,6 +47,16 @@ export function rangeAnterior(inicio: string, fim: string): { inicio: string; fi
   return { inicio: toIso(inicioAnterior), fim: toIso(fimAnterior) }
 }
 
+function ultimosSeisMeses(): { chave: string; label: string }[] {
+  const now = new Date()
+  const meses: { chave: string; label: string }[] = []
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+    meses.push({ chave: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`, label: MESES_LABEL[d.getMonth()] })
+  }
+  return meses
+}
+
 interface RankingEntry {
   nome: string
   iql_medio: number
@@ -52,12 +68,14 @@ export interface DashboardData {
   iql_variacao: number | null
   conformidade_epis: number
   total_inspecoes: number
+  inspecoes_finalizadas: number
+  inspecoes_rascunhos: number
   ncs_abertas: number
   ncs_por_criticidade: { critico: number; alto: number; medio: number; baixo: number }
   ranking_locais: RankingEntry[]
   ranking_zeladores: RankingEntry[]
-  ranking_inspetores: RankingEntry[]
-  inspecoes_por_dia: { data: string; total: number }[]
+  inspecoes_por_inspetor: RankingEntry[]
+  inspecoes_por_mes: { mes: string; iql_medio: number }[]
   ultimas_inspecoes: {
     id: string
     data: string
@@ -110,13 +128,40 @@ async function iqlMedioParaRange(
   return Math.round((soma / data.length) * 100) / 100
 }
 
+async function iqlPorMesUltimosSeisMeses(
+  supabase: SupabaseClient,
+  user: AuthUser
+): Promise<{ mes: string; iql_medio: number }[]> {
+  const isAdmin = ['admin', 'gestor'].includes(user.role)
+  const meses = ultimosSeisMeses()
+  const inicio = `${meses[0].chave}-01`
+
+  let query = supabase
+    .from('inspecoes')
+    .select('data_inspecao, indice_qualidade')
+    .eq('status', 'finalizada')
+    .gte('data_inspecao', inicio)
+
+  if (!isAdmin) query = query.eq('inspetor_id', user.id)
+
+  const { data } = await query
+  const rows = data ?? []
+
+  return meses.map((m) => {
+    const doMes = rows.filter((r) => r.data_inspecao.slice(0, 7) === m.chave)
+    const media = doMes.length
+      ? Math.round((doMes.reduce((acc, r) => acc + (r.indice_qualidade ?? 0), 0) / doMes.length) * 100) / 100
+      : 0
+    return { mes: m.label, iql_medio: media }
+  })
+}
+
 export async function getDashboardData(
   supabase: SupabaseClient,
   user: AuthUser,
-  periodo: Periodo,
-  customRange?: { inicio: string; fim: string }
+  periodo: Periodo
 ): Promise<DashboardData> {
-  const { inicio, fim } = periodo === 'personalizado' && customRange ? customRange : rangeForPeriodo(periodo)
+  const { inicio, fim } = rangeForPeriodo(periodo)
   const isAdmin = ['admin', 'gestor'].includes(user.role)
 
   let query = supabase
@@ -135,16 +180,18 @@ export async function getDashboardData(
 
   const rangeAnteriorCalc = rangeAnterior(inicio, fim)
 
-  // As três consultas abaixo são independentes entre si — rodam em paralelo
+  // As quatro consultas abaixo são independentes entre si — rodam em paralelo
   // em vez de em série para reduzir a latência total da página.
-  const [{ data: inspecoesRaw }, { data: ncsAbertasRaw }, iqlAnterior] = await Promise.all([
+  const [{ data: inspecoesRaw }, { data: ncsAbertasRaw }, iqlAnterior, inspecoesPorMes] = await Promise.all([
     query,
     ncQuery,
     iqlMedioParaRange(supabase, user, rangeAnteriorCalc.inicio, rangeAnteriorCalc.fim),
+    iqlPorMesUltimosSeisMeses(supabase, user),
   ])
 
   const inspecoes = inspecoesRaw ?? []
   const finalizadas = inspecoes.filter((i) => i.status === 'finalizada')
+  const rascunhos = inspecoes.filter((i) => i.status === 'rascunho')
 
   const iqlMedio = finalizadas.length
     ? Math.round(
@@ -185,7 +232,7 @@ export async function getDashboardData(
     }))
   )
 
-  const rankingInspetores = ranking(
+  const inspecoesPorInspetor = ranking(
     finalizadas.map((i) => ({
       id: i.id,
       indice_qualidade: i.indice_qualidade,
@@ -193,14 +240,6 @@ export async function getDashboardData(
       nome: nomeDe(i.usuarios),
     }))
   )
-
-  const porDiaMap = new Map<string, number>()
-  for (const i of inspecoes) {
-    porDiaMap.set(i.data_inspecao, (porDiaMap.get(i.data_inspecao) ?? 0) + 1)
-  }
-  const inspecoesPorDia = Array.from(porDiaMap.entries())
-    .map(([data, total]) => ({ data, total }))
-    .sort((a, b) => a.data.localeCompare(b.data))
 
   const ultimasInspecoes = [...inspecoes]
     .sort((a, b) => b.data_inspecao.localeCompare(a.data_inspecao))
@@ -223,12 +262,14 @@ export async function getDashboardData(
     iql_variacao: iqlVariacao,
     conformidade_epis: csMedio,
     total_inspecoes: inspecoes.length,
+    inspecoes_finalizadas: finalizadas.length,
+    inspecoes_rascunhos: rascunhos.length,
     ncs_abertas: ncsAbertas.length,
     ncs_por_criticidade: ncsPorCriticidade,
     ranking_locais: rankingLocais,
     ranking_zeladores: rankingZeladores,
-    ranking_inspetores: rankingInspetores,
-    inspecoes_por_dia: inspecoesPorDia,
+    inspecoes_por_inspetor: inspecoesPorInspetor,
+    inspecoes_por_mes: inspecoesPorMes,
     ultimas_inspecoes: ultimasInspecoes,
   }
 }

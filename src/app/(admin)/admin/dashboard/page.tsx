@@ -13,7 +13,7 @@ export default async function AdminDashboardPage() {
   const data = await getDashboardData(supabase, user, 'mes')
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-6">
+    <div className="mx-auto max-w-6xl px-4 py-6">
       <AdminDashboardClient initialData={data} />
     </div>
   )

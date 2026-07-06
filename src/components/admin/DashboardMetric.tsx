@@ -1,44 +1,46 @@
-import { GlassCard } from '@/components/shared/GlassCard'
 import { CircularProgress } from '@/components/shared/CircularProgress'
 
 interface DashboardMetricProps {
+  icon: React.ReactNode
   label: string
   value: string
-  ringValue?: number
+  ringValue: number
   ringColor?: string
-  variacao?: number | null
-  variacaoLabel?: string
+  subLabel: string
+  meta: string
 }
 
 export function DashboardMetric({
+  icon,
   label,
   value,
   ringValue,
-  ringColor = 'var(--forest-500)',
-  variacao,
-  variacaoLabel = 'vs período anterior',
+  ringColor = '#3dbf65',
+  subLabel,
+  meta,
 }: DashboardMetricProps) {
   return (
-    <GlassCard className="flex items-center gap-3">
-      {ringValue !== undefined && (
-        <CircularProgress value={ringValue} size={52} strokeWidth={5} color={ringColor} />
-      )}
-      <div className="flex flex-col gap-0.5">
+    <div className="dashboard-card flex flex-col gap-3">
+      <div className="flex items-center gap-1.5">
+        {icon}
         <span className="text-[11px] uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>
           {label}
         </span>
-        <span className="text-[20px] font-medium" style={{ color: 'var(--text-primary)' }}>
-          {value}
-        </span>
-        {variacao !== undefined && variacao !== null && (
-          <span
-            className="text-[11px]"
-            style={{ color: variacao >= 0 ? 'var(--baixo)' : 'var(--critico)' }}
-          >
-            {variacao >= 0 ? '↑' : '↓'} {Math.abs(variacao).toFixed(1)}% {variacaoLabel}
-          </span>
-        )}
       </div>
-    </GlassCard>
+      <div className="flex items-center gap-3">
+        <CircularProgress value={ringValue} size={48} strokeWidth={5} color={ringColor} />
+        <div className="flex flex-col">
+          <span className="text-[22px] font-medium" style={{ color: 'var(--text-primary)' }}>
+            {value}
+          </span>
+          <span className="text-[11px]" style={{ color: 'var(--text-muted)' }}>
+            {subLabel}
+          </span>
+        </div>
+      </div>
+      <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>
+        {meta}
+      </p>
+    </div>
   )
 }

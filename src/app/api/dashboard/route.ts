@@ -3,7 +3,7 @@ import { getDashboardData, type Periodo } from '@/lib/api/dashboard'
 
 export const dynamic = 'force-dynamic'
 
-const PERIODOS: Periodo[] = ['hoje', 'semana', 'mes', 'mes_anterior', 'personalizado']
+const PERIODOS: Periodo[] = ['hoje', 'semana', 'mes', 'mes_anterior', 'ultimos_3_meses']
 
 export async function GET(req: Request) {
   const { user, supabase, error } = await getAuthUser()
@@ -15,11 +15,7 @@ export async function GET(req: Request) {
     ? (periodoParam as Periodo)
     : 'mes'
 
-  const inicio = searchParams.get('inicio')
-  const fim = searchParams.get('fim')
-  const customRange = periodo === 'personalizado' && inicio && fim ? { inicio, fim } : undefined
-
-  const data = await getDashboardData(supabase, user, periodo, customRange)
+  const data = await getDashboardData(supabase, user, periodo)
 
   return ok(data)
 }
