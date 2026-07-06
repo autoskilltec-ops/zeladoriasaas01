@@ -58,8 +58,8 @@ export default function LoginPage() {
           <Image
             src={logoSrc}
             alt="ZeladoriaSaaS"
-            width={56}
-            height={58}
+            width={76}
+            height={79}
             priority
             unoptimized
             onError={() => setLogoSrc(APP_LOGO_FALLBACK_URL)}
