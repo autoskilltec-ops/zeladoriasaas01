@@ -21,6 +21,7 @@ import {
 import { GlassCard } from '@/components/shared/GlassCard'
 import { supabase } from '@/lib/supabase/client'
 import { cadastroSchema } from '@/lib/validations/auth'
+import { APP_LOGO_URL, APP_LOGO_FALLBACK_URL } from '@/lib/constants'
 
 export const dynamic = 'force-dynamic'
 
@@ -36,6 +37,7 @@ type FormInput = z.infer<typeof formSchema>
 export default function CadastroPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
+  const [logoSrc, setLogoSrc] = useState(APP_LOGO_URL)
 
   const form = useForm<FormInput>({
     resolver: zodResolver(formSchema),
@@ -91,11 +93,13 @@ export default function CadastroPage() {
       <div className="w-full max-w-sm">
         <div className="mb-6 text-center">
           <Image
-            src="/logo.png"
+            src={logoSrc}
             alt="ZeladoriaSaaS"
             width={56}
             height={58}
             priority
+            unoptimized
+            onError={() => setLogoSrc(APP_LOGO_FALLBACK_URL)}
             className="mx-auto mb-4 rounded-xl object-contain"
           />
           <h1 className="text-[18px] font-medium" style={{ color: 'var(--text-primary)' }}>

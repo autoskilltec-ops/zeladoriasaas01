@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "logo:cache-control": "node --env-file=.env.local scripts/update-logo-cache-control.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",
