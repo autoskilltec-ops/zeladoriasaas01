@@ -193,9 +193,14 @@
 }
 
 @layer components {
-  /* Fundo padrão da aplicação — app/(inspetor)/layout.tsx e app/(admin)/layout.tsx */
+  /* Fundo padrão da aplicação — app/(inspetor)/layout.tsx, app/(admin)/layout.tsx e app/(auth)/layout.tsx.
+     bg-login.png aparece como uma marca d'água clara sobre o off-white, nunca escurecendo o fundo. */
   .app-bg {
     background-color: var(--bg-app);
+    background-image: linear-gradient(rgba(245, 246, 244, 0.94), rgba(245, 246, 244, 0.94)), url('/bg-login.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
   }
 
   /* Card padrão com glassmorphism + relevo 3D */

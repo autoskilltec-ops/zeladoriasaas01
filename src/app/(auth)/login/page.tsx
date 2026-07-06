@@ -50,18 +50,8 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden px-4 py-10">
-      <Image
-        src="/bg-login.png"
-        alt=""
-        fill
-        priority
-        sizes="100vw"
-        className="object-cover"
-      />
-      <div className="absolute inset-0" style={{ background: 'rgba(31, 74, 44, 0.7)' }} />
-
-      <div className="relative z-10 w-full max-w-sm">
+    <div className="flex min-h-screen items-center justify-center px-4 py-10">
+      <div className="w-full max-w-sm">
         <div className="mb-6 text-center">
           <Image
             src="/logo.png"
@@ -71,10 +61,10 @@ export default function LoginPage() {
             priority
             className="mx-auto mb-4 rounded-xl object-contain"
           />
-          <h1 className="text-[18px] font-medium" style={{ color: 'var(--text-on-dark)' }}>
+          <h1 className="text-[18px] font-medium" style={{ color: 'var(--text-primary)' }}>
             Entrar
           </h1>
-          <p className="text-[13px]" style={{ color: 'var(--text-on-dark-muted)' }}>
+          <p className="text-[13px]" style={{ color: 'var(--text-secondary)' }}>
             Acesse sua conta ZeladoriaSaaS
           </p>
         </div>
@@ -117,9 +107,9 @@ export default function LoginPage() {
           </Form>
         </GlassCard>
 
-        <p className="mt-4 text-center text-[13px]" style={{ color: 'var(--text-on-dark-muted)' }}>
+        <p className="mt-4 text-center text-[13px]" style={{ color: 'var(--text-secondary)' }}>
           Ainda não tem uma organização?{' '}
-          <Link href="/cadastro" className="font-medium" style={{ color: 'var(--text-on-dark)' }}>
+          <Link href="/cadastro" className="font-medium" style={{ color: 'var(--forest-700)' }}>
             Criar cadastro
           </Link>
         </p>
