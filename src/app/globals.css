@@ -199,7 +199,7 @@
     background-color: var(--bg-app);
     background-image: linear-gradient(rgba(245, 246, 244, 0.5), rgba(245, 246, 244, 0.5)),
       url('https://oaxqsgqqmwyueywsckys.supabase.co/storage/v1/object/public/Logos_bc/bg-login.png');
-    background-size: 55%;
+    background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
   }
