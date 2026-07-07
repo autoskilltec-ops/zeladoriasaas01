@@ -95,8 +95,8 @@ export default function CadastroPage() {
           <Image
             src={logoSrc}
             alt="ZeladoriaSaaS"
-            width={85}
-            height={88}
+            width={120}
+            height={90}
             priority
             unoptimized
             onError={() => setLogoSrc(APP_LOGO_FALLBACK_URL)}
