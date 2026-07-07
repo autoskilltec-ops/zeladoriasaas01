@@ -58,8 +58,8 @@ export default function LoginPage() {
           <Image
             src={logoSrc}
             alt="ZeladoriaSaaS"
-            width={85}
-            height={86}
+            width={88}
+            height={92}
             priority
             unoptimized
             onError={() => setLogoSrc(APP_LOGO_FALLBACK_URL)}
@@ -69,7 +69,7 @@ export default function LoginPage() {
             Entrar
           </h1>
           <p className="text-[13px]" style={{ color: 'var(--text-secondary)' }}>
-            Acesse sua conta ZeladoriaSaaS
+            Acesse sua conta e faça parte desse time de inovação!
           </p>
         </div>
 
