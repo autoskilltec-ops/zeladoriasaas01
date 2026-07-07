@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { MoreHorizontal, type LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { APP_LOGO_URL, APP_LOGO_FALLBACK_URL } from '@/lib/constants'
 import {
   Sheet,
   SheetContent,
@@ -31,6 +32,8 @@ function isActive(pathname: string, href: string) {
 }
 
 export function Sidebar({ items, userName, userRole, profileHref }: SidebarProps) {
+  const [logoSrc, setLogoSrc] = useState(APP_LOGO_URL)
+
   const footer = (
     <div className="flex items-center gap-2.5 border-t border-white/10 px-4 py-4">
       <div
@@ -59,11 +62,13 @@ export function Sidebar({ items, userName, userRole, profileHref }: SidebarProps
       >
         <div className="flex items-center gap-2.5 px-4 py-5">
           <Image
-            src="/logo.png"
+            src={logoSrc}
             alt="ZeladoriaSaaS"
             width={32}
             height={33}
             priority
+            unoptimized
+            onError={() => setLogoSrc(APP_LOGO_FALLBACK_URL)}
             className="size-8 shrink-0 rounded-lg object-contain"
           />
           <span

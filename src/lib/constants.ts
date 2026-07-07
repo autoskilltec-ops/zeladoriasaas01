@@ -7,3 +7,6 @@ export const APP_LOGO_URL =
   `https://oaxqsgqqmwyueywsckys.supabase.co/storage/v1/object/public/Logos_bc/escudo%2001.png?v=${APP_LOGO_VERSION}`
 
 export const APP_LOGO_FALLBACK_URL = '/logo.png'
+
+export const APP_BG_URL =
+  'https://oaxqsgqqmwyueywsckys.supabase.co/storage/v1/object/public/Logos_bc/bg-login.png'

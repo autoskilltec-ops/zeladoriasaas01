@@ -194,10 +194,11 @@
 
 @layer components {
   /* Fundo padrão da aplicação — app/(inspetor)/layout.tsx, app/(admin)/layout.tsx e app/(auth)/layout.tsx.
-     bg-login.png aparece como uma marca d'água clara sobre o off-white, nunca escurecendo o fundo. */
+     bg-login.png (mesma imagem em APP_BG_URL, src/lib/constants.ts) a 50% de opacidade sobre o off-white. */
   .app-bg {
     background-color: var(--bg-app);
-    background-image: linear-gradient(rgba(245, 246, 244, 0.86), rgba(245, 246, 244, 0.86)), url('/bg-login.png');
+    background-image: linear-gradient(rgba(245, 246, 244, 0.5), rgba(245, 246, 244, 0.5)),
+      url('https://oaxqsgqqmwyueywsckys.supabase.co/storage/v1/object/public/Logos_bc/bg-login.png');
     background-size: 55%;
     background-position: center;
     background-repeat: no-repeat;
