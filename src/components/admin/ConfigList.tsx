@@ -178,7 +178,7 @@ export function ConfigList({
         )}
       </div>
 
-      <div className="mt-3 flex items-center gap-2 border-t pt-3" style={{ borderColor: '#dce3de' }}>
+      <div className="mt-3 flex items-end gap-2 border-t pt-3" style={{ borderColor: '#dce3de' }}>
         <Input
           placeholder={labelPlaceholder}
           value={novoLabel}
@@ -188,14 +188,19 @@ export function ConfigList({
           className="h-8 flex-1"
         />
         {showPeso && (
-          <Input
-            type="number"
-            step="0.1"
-            min="0.1"
-            value={novoPeso}
-            onChange={(e) => setNovoPeso(e.target.value)}
-            className="h-8 w-16"
-          />
+          <div className="flex flex-col gap-1">
+            <label className="text-[10px] font-medium" style={{ color: 'var(--text-muted)' }}>
+              Peso
+            </label>
+            <Input
+              type="number"
+              step="0.1"
+              min="0.1"
+              value={novoPeso}
+              onChange={(e) => setNovoPeso(e.target.value)}
+              className="h-8 w-16"
+            />
+          </div>
         )}
         {showObrigatorio && (
           <button

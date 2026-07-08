@@ -34,7 +34,6 @@ interface MuralItem {
 
 interface FormValues {
   nome: string
-  matricula: string
   setor: string
 }
 
@@ -62,7 +61,7 @@ export function ZeladoresClient({
   const [saving, setSaving] = useState(false)
   const [confirmar, setConfirmar] = useState<Zelador | null>(null)
 
-  const form = useForm<FormValues>({ defaultValues: { nome: '', matricula: '', setor: '' } })
+  const form = useForm<FormValues>({ defaultValues: { nome: '', setor: '' } })
 
   async function onSubmit(values: FormValues) {
     setSaving(true)
@@ -72,7 +71,6 @@ export function ZeladoresClient({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           nome: values.nome,
-          matricula: values.matricula || undefined,
           setor: values.setor || undefined,
         }),
       })
@@ -83,7 +81,7 @@ export function ZeladoresClient({
       }
       setZeladores((prev) => [
         ...prev,
-        { ...values, id: json.data.id, ativo: true, total_avaliacoes: 0, avaliacao_media: null },
+        { ...values, matricula: null, id: json.data.id, ativo: true, total_avaliacoes: 0, avaliacao_media: null },
       ])
       toast.success('Zelador adicionado')
       form.reset()
@@ -211,10 +209,6 @@ export function ZeladoresClient({
             <div className="flex flex-col gap-1.5">
               <Label>Nome *</Label>
               <Input {...form.register('nome', { required: true })} />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <Label>Matrícula</Label>
-              <Input {...form.register('matricula')} />
             </div>
             <div className="flex flex-col gap-1.5">
               <Label>Setor</Label>
