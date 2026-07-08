@@ -34,7 +34,6 @@ interface MuralItem {
 
 interface FormValues {
   nome: string
-  setor: string
 }
 
 const NIVEL_ICON: Record<ReconhecimentoNivel, typeof Star> = {
@@ -64,17 +63,17 @@ export function ZeladoresClient({
   const [excluindo, setExcluindo] = useState<Zelador | null>(null)
   const [deleting, setDeleting] = useState(false)
 
-  const form = useForm<FormValues>({ defaultValues: { nome: '', setor: '' } })
+  const form = useForm<FormValues>({ defaultValues: { nome: '' } })
 
   function abrirCriacao() {
     setEditando(null)
-    form.reset({ nome: '', setor: '' })
+    form.reset({ nome: '' })
     setDrawerOpen(true)
   }
 
   function abrirEdicao(zelador: Zelador) {
     setEditando(zelador)
-    form.reset({ nome: zelador.nome, setor: zelador.setor ?? '' })
+    form.reset({ nome: zelador.nome })
     setDrawerOpen(true)
   }
 
@@ -85,7 +84,7 @@ export function ZeladoresClient({
         const res = await fetch(`/api/zeladores/${editando.id}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ nome: values.nome, setor: values.setor || undefined }),
+          body: JSON.stringify({ nome: values.nome }),
         })
         const json = await res.json()
         if (!res.ok) {
@@ -93,17 +92,14 @@ export function ZeladoresClient({
           return
         }
         setZeladores((prev) =>
-          prev.map((z) => (z.id === editando.id ? { ...z, nome: values.nome, setor: values.setor || null } : z))
+          prev.map((z) => (z.id === editando.id ? { ...z, nome: values.nome } : z))
         )
         toast.success('Zelador atualizado')
       } else {
         const res = await fetch('/api/zeladores', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            nome: values.nome,
-            setor: values.setor || undefined,
-          }),
+          body: JSON.stringify({ nome: values.nome }),
         })
         const json = await res.json()
         if (!res.ok) {
@@ -112,7 +108,7 @@ export function ZeladoresClient({
         }
         setZeladores((prev) => [
           ...prev,
-          { ...values, matricula: null, id: json.data.id, ativo: true, total_avaliacoes: 0, avaliacao_media: null },
+          { ...values, matricula: null, setor: null, id: json.data.id, ativo: true, total_avaliacoes: 0, avaliacao_media: null },
         ])
         toast.success('Zelador adicionado')
       }
@@ -273,10 +269,6 @@ export function ZeladoresClient({
             <div className="flex flex-col gap-1.5">
               <Label>Nome *</Label>
               <Input {...form.register('nome', { required: true })} />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <Label>Setor</Label>
-              <Input {...form.register('setor')} />
             </div>
             <Button type="submit" className="btn-primary" disabled={saving}>
               {saving ? 'Salvando...' : 'Salvar'}
