@@ -8,7 +8,6 @@ export const loginSchema = z.object({
 export type LoginInput = z.infer<typeof loginSchema>
 
 export const cadastroSchema = z.object({
-  nome_organizacao: z.string().min(2).max(100),
   nome_admin: z.string().min(2).max(100),
   email: z.string().email('E-mail inválido'),
   senha: z.string().min(8, 'Mínimo de 8 caracteres'),

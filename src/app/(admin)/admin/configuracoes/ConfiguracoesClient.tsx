@@ -123,7 +123,6 @@ export function ConfiguracoesClient({
   const [epis, setEpis] = useState<ConfigItem[]>(episIniciais)
   const [org, setOrg] = useState(organizacaoInicial)
   const [savingMetas, setSavingMetas] = useState(false)
-  const [savingOrg, setSavingOrg] = useState(false)
 
   const criteriosHandlers = createHandlers('/api/criterios', 'nome', criterios, setCriterios)
   const checklistHandlers = createHandlers('/api/checklist-seguranca', 'descricao', checklist, setChecklist)
@@ -150,24 +149,6 @@ export function ConfiguracoesClient({
     }
   }
 
-  async function salvarOrg() {
-    setSavingOrg(true)
-    try {
-      const res = await fetch('/api/organizacao', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nome: org.nome, logo_url: org.logo_url ?? '' }),
-      })
-      if (!res.ok) {
-        toast.error('Erro ao salvar organização')
-        return
-      }
-      toast.success('Organização atualizada')
-    } finally {
-      setSavingOrg(false)
-    }
-  }
-
   return (
     <div className="flex flex-col gap-5">
       <div>
@@ -175,7 +156,7 @@ export function ConfiguracoesClient({
           Configurações
         </h1>
         <p className="text-[13px]" style={{ color: 'var(--text-secondary)' }}>
-          Personalize os critérios, checklists e dados da organização
+          Personalize os critérios, checklists e metas da organização
         </p>
       </div>
 
@@ -231,27 +212,6 @@ export function ConfiguracoesClient({
         </div>
         <Button type="button" className="btn-primary self-start" onClick={salvarMetas} disabled={savingMetas}>
           {savingMetas ? 'Salvando...' : 'Salvar metas'}
-        </Button>
-      </GlassCard>
-
-      <GlassCard className="flex flex-col gap-4">
-        <p className="text-[13px] font-medium" style={{ color: 'var(--text-primary)' }}>
-          Dados da organização
-        </p>
-        <div className="flex flex-col gap-1.5">
-          <Label>Nome da organização</Label>
-          <Input value={org.nome} onChange={(e) => setOrg((prev) => ({ ...prev, nome: e.target.value }))} />
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <Label>URL do logo</Label>
-          <Input
-            placeholder="https://..."
-            value={org.logo_url ?? ''}
-            onChange={(e) => setOrg((prev) => ({ ...prev, logo_url: e.target.value }))}
-          />
-        </div>
-        <Button type="button" className="btn-primary self-start" onClick={salvarOrg} disabled={savingOrg}>
-          {savingOrg ? 'Salvando...' : 'Salvar organização'}
         </Button>
       </GlassCard>
     </div>

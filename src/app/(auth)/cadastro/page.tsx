@@ -42,7 +42,6 @@ export default function CadastroPage() {
   const form = useForm<FormInput>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      nome_organizacao: '',
       nome_admin: '',
       email: '',
       senha: '',
@@ -57,7 +56,6 @@ export default function CadastroPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          nome_organizacao: values.nome_organizacao,
           nome_admin: values.nome_admin,
           email: values.email,
           senha: values.senha,
@@ -113,20 +111,6 @@ export default function CadastroPage() {
         <GlassCard>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-4">
-              <FormField
-                control={form.control}
-                name="nome_organizacao"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Nome da organização</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Minha Empresa Ltda" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
               <FormField
                 control={form.control}
                 name="nome_admin"

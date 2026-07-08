@@ -12,7 +12,7 @@ export async function POST(req: Request) {
   const parsed = cadastroSchema.safeParse(body)
   if (!parsed.success) return err(parsed.error.issues[0]?.message ?? 'Dados inválidos', 422)
 
-  const { nome_organizacao, nome_admin, email, senha } = parsed.data
+  const { nome_admin, email, senha } = parsed.data
   const supabaseAdmin = getSupabaseAdmin()
 
   // 1. Cria usuário no Supabase Auth
@@ -23,11 +23,12 @@ export async function POST(req: Request) {
   })
   if (authErr || !authUser.user) return err(authErr?.message ?? 'Erro ao criar usuário', 500)
 
-  // 2. Cria organização
-  const slug = slugify(nome_organizacao)
+  // 2. Cria organização (nome/slug gerados a partir do admin, já que não coletamos mais o nome da organização)
+  const nomeOrganizacao = `Organização de ${nome_admin}`
+  const slug = `${slugify(nomeOrganizacao)}-${authUser.user.id.slice(0, 8)}`
   const { data: org, error: orgErr } = await supabaseAdmin
     .from('organizacoes')
-    .insert({ nome: nome_organizacao, slug })
+    .insert({ nome: nomeOrganizacao, slug })
     .select('id')
     .single()
   if (orgErr || !org) {
