@@ -36,11 +36,24 @@ export async function PATCH(req: Request, { params }: RouteContext) {
   return ok(data)
 }
 
-export async function DELETE(_req: Request, { params }: RouteContext) {
+export async function DELETE(req: Request, { params }: RouteContext) {
   const { id } = await params
   const { user, supabase, error } = await getAuthUser()
   if (error || !user) return err('Não autorizado', 401)
   if (!['admin', 'gestor'].includes(user.role)) return err('Sem permissão', 403)
+
+  const permanente = new URL(req.url).searchParams.get('permanente') === 'true'
+
+  if (permanente) {
+    const { error: deleteError } = await supabase.from('zeladores').delete().eq('id', id)
+    if (deleteError) {
+      if (deleteError.code === '23503') {
+        return err('Não é possível excluir: existem inspeções vinculadas a este zelador. Desative-o em vez disso.', 409)
+      }
+      return err(deleteError.message, 500)
+    }
+    return ok({ id })
+  }
 
   const { error: updateError } = await supabase
     .from('zeladores')

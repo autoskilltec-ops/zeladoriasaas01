@@ -60,34 +60,84 @@ export function ZeladoresClient({
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [saving, setSaving] = useState(false)
   const [confirmar, setConfirmar] = useState<Zelador | null>(null)
+  const [editando, setEditando] = useState<Zelador | null>(null)
+  const [excluindo, setExcluindo] = useState<Zelador | null>(null)
+  const [deleting, setDeleting] = useState(false)
 
   const form = useForm<FormValues>({ defaultValues: { nome: '', setor: '' } })
+
+  function abrirCriacao() {
+    setEditando(null)
+    form.reset({ nome: '', setor: '' })
+    setDrawerOpen(true)
+  }
+
+  function abrirEdicao(zelador: Zelador) {
+    setEditando(zelador)
+    form.reset({ nome: zelador.nome, setor: zelador.setor ?? '' })
+    setDrawerOpen(true)
+  }
 
   async function onSubmit(values: FormValues) {
     setSaving(true)
     try {
-      const res = await fetch('/api/zeladores', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          nome: values.nome,
-          setor: values.setor || undefined,
-        }),
-      })
-      const json = await res.json()
-      if (!res.ok) {
-        toast.error(json.error?.message ?? 'Erro ao criar zelador')
-        return
+      if (editando) {
+        const res = await fetch(`/api/zeladores/${editando.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nome: values.nome, setor: values.setor || undefined }),
+        })
+        const json = await res.json()
+        if (!res.ok) {
+          toast.error(json.error?.message ?? 'Erro ao atualizar zelador')
+          return
+        }
+        setZeladores((prev) =>
+          prev.map((z) => (z.id === editando.id ? { ...z, nome: values.nome, setor: values.setor || null } : z))
+        )
+        toast.success('Zelador atualizado')
+      } else {
+        const res = await fetch('/api/zeladores', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            nome: values.nome,
+            setor: values.setor || undefined,
+          }),
+        })
+        const json = await res.json()
+        if (!res.ok) {
+          toast.error(json.error?.message ?? 'Erro ao criar zelador')
+          return
+        }
+        setZeladores((prev) => [
+          ...prev,
+          { ...values, matricula: null, id: json.data.id, ativo: true, total_avaliacoes: 0, avaliacao_media: null },
+        ])
+        toast.success('Zelador adicionado')
       }
-      setZeladores((prev) => [
-        ...prev,
-        { ...values, matricula: null, id: json.data.id, ativo: true, total_avaliacoes: 0, avaliacao_media: null },
-      ])
-      toast.success('Zelador adicionado')
       form.reset()
+      setEditando(null)
       setDrawerOpen(false)
     } finally {
       setSaving(false)
+    }
+  }
+
+  async function excluirZelador(zelador: Zelador) {
+    setDeleting(true)
+    try {
+      const res = await fetch(`/api/zeladores/${zelador.id}?permanente=true`, { method: 'DELETE' })
+      const json = await res.json()
+      if (!res.ok) {
+        toast.error(json.error?.message ?? 'Erro ao excluir zelador')
+        return
+      }
+      setZeladores((prev) => prev.filter((z) => z.id !== zelador.id))
+      toast.success('Zelador excluído')
+      setExcluindo(null)
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -117,7 +167,7 @@ export function ZeladoresClient({
             Gerencie a equipe de zeladoria
           </p>
         </div>
-        <Button className="btn-primary" onClick={() => setDrawerOpen(true)}>
+        <Button className="btn-primary" onClick={abrirCriacao}>
           Adicionar zelador
         </Button>
       </div>
@@ -153,9 +203,17 @@ export function ZeladoresClient({
                       <Badge variant={z.ativo ? 'default' : 'secondary'}>{z.ativo ? 'Ativo' : 'Inativo'}</Badge>
                     </td>
                     <td className="py-2 pr-3">
-                      <Button size="sm" variant="outline" onClick={() => setConfirmar(z)}>
-                        {z.ativo ? 'Desativar' : 'Ativar'}
-                      </Button>
+                      <div className="flex items-center gap-1.5">
+                        <Button size="sm" variant="outline" onClick={() => abrirEdicao(z)}>
+                          Editar
+                        </Button>
+                        <Button size="sm" variant="outline" onClick={() => setConfirmar(z)}>
+                          {z.ativo ? 'Desativar' : 'Ativar'}
+                        </Button>
+                        <Button size="sm" variant="destructive" onClick={() => setExcluindo(z)}>
+                          Excluir
+                        </Button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -200,10 +258,16 @@ export function ZeladoresClient({
         </div>
       </div>
 
-      <Sheet open={drawerOpen} onOpenChange={setDrawerOpen}>
+      <Sheet
+        open={drawerOpen}
+        onOpenChange={(v) => {
+          setDrawerOpen(v)
+          if (!v) setEditando(null)
+        }}
+      >
         <SheetContent side="right">
           <SheetHeader>
-            <SheetTitle>Adicionar zelador</SheetTitle>
+            <SheetTitle>{editando ? 'Editar zelador' : 'Adicionar zelador'}</SheetTitle>
           </SheetHeader>
           <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-4 px-4 pb-4">
             <div className="flex flex-col gap-1.5">
@@ -228,6 +292,17 @@ export function ZeladoresClient({
         confirmLabel={confirmar?.ativo ? 'Desativar' : 'Ativar'}
         destructive={!!confirmar?.ativo}
         onConfirm={() => confirmar && alternarAtivo(confirmar)}
+      />
+
+      <ConfirmDialog
+        open={!!excluindo}
+        onOpenChange={(v) => !v && setExcluindo(null)}
+        title={`Excluir "${excluindo?.nome}"?`}
+        description="Esta ação é permanente e não pode ser desfeita. Se houver inspeções vinculadas a este zelador, a exclusão será bloqueada — desative-o nesse caso."
+        confirmLabel="Excluir"
+        destructive
+        loading={deleting}
+        onConfirm={() => excluindo && excluirZelador(excluindo)}
       />
     </div>
   )

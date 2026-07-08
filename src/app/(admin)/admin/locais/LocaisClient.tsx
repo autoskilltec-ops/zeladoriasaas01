@@ -49,39 +49,114 @@ export function LocaisClient({ locaisIniciais }: { locaisIniciais: Local[] }) {
   const [selecionado, setSelecionado] = useState<Local | null>(null)
   const [historico, setHistorico] = useState<HistoricoItem[]>([])
   const [confirmar, setConfirmar] = useState<Local | null>(null)
+  const [editando, setEditando] = useState<Local | null>(null)
+  const [excluindo, setExcluindo] = useState<Local | null>(null)
+  const [deleting, setDeleting] = useState(false)
 
   const form = useForm<FormValues>({
     defaultValues: { nome: '', tipo: '', bloco: '', andar: '', descricao: '' },
   })
 
+  function abrirCriacao() {
+    setEditando(null)
+    form.reset({ nome: '', tipo: '', bloco: '', andar: '', descricao: '' })
+    setDrawerOpen(true)
+  }
+
+  function abrirEdicao(local: Local) {
+    setEditando(local)
+    form.reset({
+      nome: local.nome,
+      tipo: local.tipo ?? '',
+      bloco: local.bloco ?? '',
+      andar: local.andar ?? '',
+      descricao: local.descricao ?? '',
+    })
+    setSelecionado(null)
+    setDrawerOpen(true)
+  }
+
   async function onSubmit(values: FormValues) {
     setSaving(true)
     try {
-      const res = await fetch('/api/locais', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          nome: values.nome,
-          tipo: values.tipo || undefined,
-          bloco: values.bloco || undefined,
-          andar: values.andar || undefined,
-          descricao: values.descricao || undefined,
-        }),
-      })
-      const json = await res.json()
-      if (!res.ok) {
-        toast.error(json.error?.message ?? 'Erro ao criar local')
-        return
+      if (editando) {
+        const res = await fetch(`/api/locais/${editando.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            nome: values.nome,
+            tipo: values.tipo || undefined,
+            bloco: values.bloco || undefined,
+            andar: values.andar || undefined,
+            descricao: values.descricao || undefined,
+          }),
+        })
+        const json = await res.json()
+        if (!res.ok) {
+          toast.error(json.error?.message ?? 'Erro ao atualizar local')
+          return
+        }
+        setLocais((prev) =>
+          prev.map((l) =>
+            l.id === editando.id
+              ? {
+                  ...l,
+                  nome: values.nome,
+                  tipo: values.tipo || null,
+                  bloco: values.bloco || null,
+                  andar: values.andar || null,
+                  descricao: values.descricao || null,
+                }
+              : l
+          )
+        )
+        toast.success('Local atualizado')
+      } else {
+        const res = await fetch('/api/locais', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            nome: values.nome,
+            tipo: values.tipo || undefined,
+            bloco: values.bloco || undefined,
+            andar: values.andar || undefined,
+            descricao: values.descricao || undefined,
+          }),
+        })
+        const json = await res.json()
+        if (!res.ok) {
+          toast.error(json.error?.message ?? 'Erro ao criar local')
+          return
+        }
+        setLocais((prev) => [
+          ...prev,
+          { ...values, id: json.data.id, ativo: true, total_inspecoes: 0, iql_medio: null },
+        ])
+        toast.success('Local adicionado')
       }
-      setLocais((prev) => [
-        ...prev,
-        { ...values, id: json.data.id, ativo: true, total_inspecoes: 0, iql_medio: null },
-      ])
-      toast.success('Local adicionado')
       form.reset()
+      setEditando(null)
       setDrawerOpen(false)
     } finally {
       setSaving(false)
+    }
+  }
+
+  async function excluirLocal(local: Local) {
+    setDeleting(true)
+    try {
+      const res = await fetch(`/api/locais/${local.id}?permanente=true`, { method: 'DELETE' })
+      const json = await res.json()
+      if (!res.ok) {
+        toast.error(json.error?.message ?? 'Erro ao excluir local')
+        return
+      }
+      setLocais((prev) => prev.filter((l) => l.id !== local.id))
+      setSelecionado((prev) => (prev && prev.id === local.id ? null : prev))
+      setExcluindo(null)
+      toast.success('Local excluído')
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -120,7 +195,7 @@ export function LocaisClient({ locaisIniciais }: { locaisIniciais: Local[] }) {
             Gerencie os locais inspecionados
           </p>
         </div>
-        <Button className="btn-primary" onClick={() => setDrawerOpen(true)}>
+        <Button className="btn-primary" onClick={abrirCriacao}>
           Adicionar local
         </Button>
       </div>
@@ -154,10 +229,16 @@ export function LocaisClient({ locaisIniciais }: { locaisIniciais: Local[] }) {
         )}
       </div>
 
-      <Sheet open={drawerOpen} onOpenChange={setDrawerOpen}>
+      <Sheet
+        open={drawerOpen}
+        onOpenChange={(v) => {
+          setDrawerOpen(v)
+          if (!v) setEditando(null)
+        }}
+      >
         <SheetContent side="right">
           <SheetHeader>
-            <SheetTitle>Adicionar local</SheetTitle>
+            <SheetTitle>{editando ? 'Editar local' : 'Adicionar local'}</SheetTitle>
           </SheetHeader>
           <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-4 px-4 pb-4">
             <div className="flex flex-col gap-1.5">
@@ -227,13 +308,25 @@ export function LocaisClient({ locaisIniciais }: { locaisIniciais: Local[] }) {
                   </div>
                 </div>
 
+                <div className="mt-1 flex gap-2">
+                  <Button type="button" variant="outline" className="flex-1" onClick={() => abrirEdicao(selecionado)}>
+                    Editar
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={selecionado.ativo ? 'destructive' : 'default'}
+                    className="flex-1"
+                    onClick={() => setConfirmar(selecionado)}
+                  >
+                    {selecionado.ativo ? 'Desativar' : 'Ativar'}
+                  </Button>
+                </div>
                 <Button
                   type="button"
-                  variant={selecionado.ativo ? 'destructive' : 'default'}
-                  className="mt-1"
-                  onClick={() => setConfirmar(selecionado)}
+                  variant="destructive"
+                  onClick={() => setExcluindo(selecionado)}
                 >
-                  {selecionado.ativo ? 'Desativar local' : 'Ativar local'}
+                  Excluir local
                 </Button>
               </div>
             </>
@@ -253,6 +346,17 @@ export function LocaisClient({ locaisIniciais }: { locaisIniciais: Local[] }) {
         confirmLabel={confirmar?.ativo ? 'Desativar' : 'Ativar'}
         destructive={!!confirmar?.ativo}
         onConfirm={() => confirmar && alternarAtivo(confirmar)}
+      />
+
+      <ConfirmDialog
+        open={!!excluindo}
+        onOpenChange={(v) => !v && setExcluindo(null)}
+        title={`Excluir "${excluindo?.nome}"?`}
+        description="Esta ação é permanente e não pode ser desfeita. Se houver inspeções vinculadas a este local, a exclusão será bloqueada — desative-o nesse caso."
+        confirmLabel="Excluir"
+        destructive
+        loading={deleting}
+        onConfirm={() => excluindo && excluirLocal(excluindo)}
       />
     </div>
   )
